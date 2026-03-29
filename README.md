@@ -56,7 +56,7 @@ You can install Postman via this website: https://www.postman.com/downloads/
     -   [x] Commit: `Implement add function in Subscriber repository.`
     -   [x] Commit: `Implement list_all function in Subscriber repository.`
     -   [x] Commit: `Implement delete function in Subscriber repository.`
-    -   [ ] Write answers of your learning module's "Reflection Publisher-1" questions in this README.
+    -   [x] Write answers of your learning module's "Reflection Publisher-1" questions in this README.
 -   **STAGE 2: Implement services and controllers**
     -   [ ] Commit: `Create Notification service struct skeleton.`
     -   [ ] Commit: `Implement subscribe function in Notification service.`
@@ -77,6 +77,12 @@ This is the place for you to write reflections:
 ### Mandatory (Publisher) Reflections
 
 #### Reflection Publisher-1
+
+1. penggunaan single model struct sudah cukup karena kita hanya memiliki satu jenis entitas subscriber dengan struktur data dan perilaku (seperti menerima notifikasi) yang seragam. Penggunaan interface atau trait dalam arsitektur perangkat lunak sebenarnya ditujukan untuk mencapai polimorfisme yang semuanya perlu terikat pada satu kontrak implementasi metode pembaruan (update) yang sama. Karena aplikasi kita belum membutuhkan variasi fungsionalitas berlapis semacam itu, membuat trait saat ini justru akan menambah kompleksitas kode tanpa memberikan manfaat arsitektural yang signifikan
+
+2. Penggunaan `DashMap` (map/dictionary) jauh lebih esensial dan rasional dibandingkan `Vec` (list) untuk kasus ini karena atribut yang unik seperti `id` dan `url` secara natural berfungsi layaknya primary key dalam operasi basis data. Jika kita menyimpan data menggunakan Vec, setiap operasi pencarian, modifikasi, atau penghapusan data spesifik akan memaksa program melakukan iterasi satu per satu (linear search) dengan kompleksitas O(n), yang akan sangat menurunkan performa ketika jumlah subscriber membengkak. Sebaliknya, struktur dictionary pada DashMap menggunakan mekanisme hashing yang memungkinkan pencarian dan manipulasi data berdasarkan key unik tersebut dieksekusi dengan kompleksitas waktu konstan atau rata-rata O(1)
+
+3. Sebenarnya `DashMap` dan pola desain Singleton bukanlah dua konsep substitusi untuk dipilih salah satu, melainkan keduanya saling melengkapi dalam kode kita: makro `lazy_static` bertugas mengimplementasikan Singleton dengan memastikan hanya ada satu instance penyimpan data global di memori, sementara `DashMap` berfungsi untuk memastikan instance tunggal tersebut thread-safe. Karena kerangka kerja web backend beroperasi secara konkuren untuk menangani banyak rute permintaan (request) secara bersamaan, aturan borrow checker Rust yang sangat ketat melarang keras adanya global mutable state tanpa adanya mekanisme sinkronisasi untuk mencegah data race. Seandainya kita membuat Singleton manual yang hanya berisi `HashMap` standar, compiler Rust tetap akan memaksa kita untuk membungkus struktur data tersebut dengan lock seperti `Mutex` atau `RwLock`; sehingga penggunaan `DashMap` (yang di baliknya sudah mengimplementasi granular locking secara internal) sangat mempermudah pembuatan Singleton yang aman pada ekosistem multi-threading
 
 #### Reflection Publisher-2
 
