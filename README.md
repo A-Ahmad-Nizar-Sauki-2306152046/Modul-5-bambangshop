@@ -65,11 +65,11 @@ You can install Postman via this website: https://www.postman.com/downloads/
     -   [x] Commit: `Implement unsubscribe function in Notification controller.`
     -   [x] Write answers of your learning module's "Reflection Publisher-2" questions in this README.
 -   **STAGE 3: Implement notification mechanism**
-    -   [ ] Commit: `Implement update method in Subscriber model to send notification HTTP requests.`
-    -   [ ] Commit: `Implement notify function in Notification service to notify each Subscriber.`
-    -   [ ] Commit: `Implement publish function in Program service and Program controller.`
-    -   [ ] Commit: `Edit Product service methods to call notify after create/delete.`
-    -   [ ] Write answers of your learning module's "Reflection Publisher-3" questions in this README.
+    -   [x] Commit: `Implement update method in Subscriber model to send notification HTTP requests.`
+    -   [x] Commit: `Implement notify function in Notification service to notify each Subscriber.`
+    -   [x] Commit: `Implement publish function in Program service and Program controller.`
+    -   [x] Commit: `Edit Product service methods to call notify after create/delete.`
+    -   [x] Write answers of your learning module's "Reflection Publisher-3" questions in this README.
 
 ## Your Reflections
 This is the place for you to write reflections:
@@ -93,3 +93,9 @@ This is the place for you to write reflections:
 3. Eksplorasi menggunakan Postman terbukti sangat krusial dalam memvalidasi fungsionalitas aplikasi backend saat ini karena memungkinkan simulasi dan inspeksi permintaan HTTP secara detail (seperti misal penambahan atau penghapusan subscriber via metode POST) tanpa perlu menunggu kesiapan antarmuka frontend. Untuk pengembangan Proyek Kelompok (Group Project) maupun proyek software engineering lainnya di masa depan, fitur Collections di Postman sangat menarik karena dapat digunakan sebagai dokumentasi API yang interaktif dan dapat dibagikan (di-share) agar seluruh anggota tim memiliki acuan endpoint yang sama. Selain itu, dukungan fitur Environment Variables untuk memudahkan perpindahan testing dari skala localhost ke production, serta kemampuan menyisipkan Automated Testing scripts untuk memverifikasi respons API secara otomatis, akan sangat menghemat waktu dalam fase Quality Assurance.
 
 #### Reflection Publisher-3
+
+1. Dalam tutorial ini, saya mengimplementasikan variasi Push model. Terlihat sangat jelas pada logika di dalam `NotificationService::notify`, di mana publisher bertindak lebih aktif dengan merakit payload (yang berisi detail produk dan status) lalu langsung melakukan push kepada seluruh subscriber yang terkait dengan memanggil metode `update()` yang melakukan HTTP POST request. Dalam model ini, subscriber bersifat pasif dan hanya menerima aliran data seketika saat sebuah event (create, publish, atau delete product) dieksekusi oleh publisher.
+
+2. Misal kita menggunakan Pull model, kelebihan utamanya subscriber memiliki kendali penuh atas kapan mereka ingin mengambil (pull) data, sehingga sistem subscriber tidak akan kewalahan jika publisher menghasilkan lonjakan event yang masif dalam satu waktu. Namun, kelemahan fatalnya untuk aplikasi notifikasi real-time seperti ini adalah inefisiensi arsitektur, yang mana subscriber harus secara berkala melakukan polling ke server publisher untuk mengecek apakah ada pembaruan, atau mengharuskan publisher menyimpan status state pembaruan tersebut lebih lama di database sampai semua subscriber selesai mengambil datanya.
+
+3. Jika kita membuang implementasi multi-threading (menghapus `thread::spawn`) pada proses notifikasi, program akan mengalami hambatan performa yang parah (bottleneck) akibat proses yang berjalan secara sinkron. Karena pengiriman notifikasi menggunakan HTTP request yang merupakan operasi I/O dan membutuhkan waktu tunggu, thread utama yang melayani permintaan klien akan tertahan. Akibatnya, ketika admin menambahkan satu produk baru, ia tidak akan langsung mendapatkan respons HTTP 201 Created, melainkan harus menunggu layarnya loading sampai looping pengiriman pesan ke ratusan atau ribuan subscriber selesai dieksekusi satu per satu.
